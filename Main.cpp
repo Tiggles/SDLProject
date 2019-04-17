@@ -102,7 +102,7 @@ bool init() {
 }
 
 bool load_media() {
-	texture = load_texture("Image.png");
+	texture = load_texture("viewport.png");
 	if (texture == NULL) {
 		printf("Failed to load texture\n");
 		return false;
@@ -147,23 +147,31 @@ int main(int argc, char *args[]) {
 		SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
 		SDL_RenderClear(renderer);
 
-		SDL_Rect fillRect = { SCREEN_WIDTH / 4, SCREEN_HEIGHT / 4, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2};
+		SDL_Rect topLeftViewport;
+		topLeftViewport.x = 0;
+		topLeftViewport.y = 0;
+		topLeftViewport.w = SCREEN_WIDTH / 2;
+		topLeftViewport.h = SCREEN_HEIGHT / 2;
+		SDL_RenderSetViewport(renderer, &topLeftViewport);
+		SDL_RenderCopy(renderer, texture, NULL, NULL);
 
-		SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
-		SDL_RenderFillRect(renderer, &fillRect);
+		SDL_Rect topRightViewport;
+		topRightViewport.x = SCREEN_WIDTH / 2;
+		topRightViewport.y = 0;
+		topRightViewport.w = SCREEN_WIDTH / 2;
+		topRightViewport.h = SCREEN_HEIGHT /2;
+		SDL_RenderSetViewport(renderer, &topRightViewport);
+		SDL_RenderCopy(renderer, texture, NULL, NULL);
 
-		SDL_Rect outlineRect = { SCREEN_WIDTH / 6, SCREEN_HEIGHT / 6, SCREEN_WIDTH * 2/3, SCREEN_HEIGHT * 2/3 };
-		SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, 0xFF);
-		SDL_RenderDrawRect(renderer, &outlineRect);
+		SDL_Rect bottomViewport;
+		bottomViewport.x = 0;
+		bottomViewport.y = SCREEN_HEIGHT / 2;
+		bottomViewport.w = SCREEN_WIDTH;
+		bottomViewport.h = SCREEN_HEIGHT / 2;
 
-		SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0xFF, 0xFF);
-		SDL_RenderDrawLine(renderer, 0, SCREEN_HEIGHT / 2, SCREEN_WIDTH, SCREEN_HEIGHT / 2);
-
-		SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0x00, 0xFF);
-		for (auto i = 0; i < SCREEN_HEIGHT; i += 4) 
-			SDL_RenderDrawPoint(renderer, SCREEN_WIDTH / 2, i);
-		// Render texture
-		//SDL_RenderCopy(renderer, texture, NULL, NULL);
+		SDL_RenderSetViewport(renderer, &bottomViewport);
+		SDL_RenderCopy(renderer, texture, NULL, NULL);
+		
 		SDL_RenderPresent(renderer);
 	}
 	close();

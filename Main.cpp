@@ -1,8 +1,9 @@
+#pragma once
 #ifdef __APPLE__
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_image.h"
 #elif _WIN64 || _WIN32
-#include <SDL.h>j
+#include <SDL.h>
 #include <SDL_image.h>
 #endif
 #include <stdio.h>
@@ -19,6 +20,7 @@ SDL_Surface *load_surface(std::string path);
 // Load invidivual image as texture
 SDL_Texture *load_texture(std::string path);
 
+
 enum KeyPressSurfaces
 {
 	KEY_PRESS_SURFACE_DEFAULT,
@@ -29,12 +31,78 @@ enum KeyPressSurfaces
 	KEY_PRESS_SURFACE_TOTAL
 };
 
-SDL_Window *window = NULL;
-SDL_Surface *screenSurface = NULL;
-SDL_Surface *gKeyPressSurfaces[KEY_PRESS_SURFACE_TOTAL];
-SDL_Surface *currentSurface = NULL;
-SDL_Renderer *renderer = NULL;
-SDL_Texture *texture = NULL;
+SDL_Window* window = NULL;
+SDL_Surface* screenSurface = NULL;
+SDL_Surface* gKeyPressSurfaces[KEY_PRESS_SURFACE_TOTAL];
+SDL_Surface* currentSurface = NULL;
+SDL_Renderer* renderer = NULL;
+
+class LTexture {
+	SDL_Texture* texture;
+
+	int width;
+	int height;
+
+public:
+	LTexture();
+	~LTexture();
+	bool load_from_file(std::string path);
+
+	void free();
+	void render(int x, int y);
+	int get_width();
+	int get_height();
+};
+
+LTexture::LTexture() {
+	texture = NULL;
+	width = 0;
+	height = 0;
+}
+
+LTexture::~LTexture() {
+	free();
+}
+
+bool LTexture::load_from_file(std::string path) {
+	free();
+
+	SDL_Texture* new_texture = nullptr;
+
+	SDL_Surface* loaded_surface = IMG_Load(path.c_str());
+	if (!loaded_surface) {
+		printf("Unable to load image %s! SDL_image Error: %s\n", path.c_str(), IMG_GetError());
+		return false;
+	}
+
+	SDL_SetColorKey(loaded_surface, SDL_TRUE, SDL_MapRGB(loaded_surface->format, 0, 0xFF, 0xFF));
+	new_texture = SDL_CreateTextureFromSurface(renderer, loaded_surface);
+	if (!new_texture) {
+		printf("Unable to create texture from %s! SDL Error: %s\n", path.c_str(), SDL_GetError());
+		return false;
+	}
+	width = loaded_surface->w;
+	height = loaded_surface->h;
+
+	texture = new_texture;
+	return texture != NULL;
+}
+
+void LTexture::free() {
+	if (!texture) return;
+	SDL_DestroyTexture(texture);
+	texture = NULL;
+	width = 0;
+	height = 0;
+}
+
+void LTexture::render(int x = 0, int y = 0) {
+	SDL_Rect renderQuad = { x, y, width, height };
+	SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
+}
+
+LTexture texture;
+LTexture background_texture;
 
 SDL_Texture *load_texture(std::string path) {
 	// Final texture
@@ -103,17 +171,20 @@ bool init() {
 }
 
 bool load_media() {
-	texture = load_texture("viewport.png");
-	if (texture == NULL) {
+	if (!texture.load_from_file("dude.png")) {
 		printf("Failed to load texture\n");
+		return false;
+	}
+	if (!background_texture.load_from_file("background.png")) {
+		printf("Failed to load background texture image!\n");
 		return false;
 	}
 	return true;
 }
 
 void close() {
-	SDL_DestroyTexture(texture);
-	texture = NULL;
+	texture.free();
+	background_texture.free();
 
 	SDL_DestroyRenderer(renderer);
 	renderer = NULL;
@@ -148,30 +219,8 @@ int main(int argc, char *args[]) {
 		SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
 		SDL_RenderClear(renderer);
 
-		SDL_Rect topLeftViewport;
-		topLeftViewport.x = 0;
-		topLeftViewport.y = 0;
-		topLeftViewport.w = SCREEN_WIDTH / 2;
-		topLeftViewport.h = SCREEN_HEIGHT / 2;
-		SDL_RenderSetViewport(renderer, &topLeftViewport);
-		SDL_RenderCopy(renderer, texture, NULL, NULL);
-
-		SDL_Rect topRightViewport;
-		topRightViewport.x = SCREEN_WIDTH / 2;
-		topRightViewport.y = 0;
-		topRightViewport.w = SCREEN_WIDTH / 2;
-		topRightViewport.h = SCREEN_HEIGHT /2;
-		SDL_RenderSetViewport(renderer, &topRightViewport);
-		SDL_RenderCopy(renderer, texture, NULL, NULL);
-
-		SDL_Rect bottomViewport;
-		bottomViewport.x = 0;
-		bottomViewport.y = SCREEN_HEIGHT / 2;
-		bottomViewport.w = SCREEN_WIDTH;
-		bottomViewport.h = SCREEN_HEIGHT / 2;
-
-		SDL_RenderSetViewport(renderer, &bottomViewport);
-		SDL_RenderCopy(renderer, texture, NULL, NULL);
+		background_texture.render();
+		texture.render(240, 190);
 		
 		SDL_RenderPresent(renderer);
 	}

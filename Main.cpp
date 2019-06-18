@@ -1,13 +1,9 @@
 #pragma once
-#ifdef __APPLE__
-#include "SDL2/SDL.h"
-#include "SDL2/SDL_image.h"
-#elif _WIN64 || _WIN32
-#include <SDL.h>
-#include <SDL_image.h>
-#endif
+
 #include <stdio.h>
 #include <string>
+#include "SDL_Includes.hpp"
+#include "Texture.hpp"
 
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
@@ -15,14 +11,12 @@ const int SCREEN_HEIGHT = 480;
 bool init();
 bool load_media();
 void close();
-SDL_Surface *load_surface(std::string path);
 
 // Load invidivual image as texture
 SDL_Texture *load_texture(std::string path);
 
 
-enum KeyPressSurfaces
-{
+enum KeyPressSurfaces {
 	KEY_PRESS_SURFACE_DEFAULT,
 	KEY_PRESS_SURFACE_UP,
 	KEY_PRESS_SURFACE_DOWN,
@@ -36,70 +30,6 @@ SDL_Surface* screenSurface = NULL;
 SDL_Surface* gKeyPressSurfaces[KEY_PRESS_SURFACE_TOTAL];
 SDL_Surface* currentSurface = NULL;
 SDL_Renderer* renderer = NULL;
-
-class LTexture {
-	SDL_Texture* texture;
-
-	int width;
-	int height;
-
-public:
-	LTexture();
-	~LTexture();
-	bool load_from_file(std::string path);
-
-	void free();
-	void render(int x, int y);
-	int get_width();
-	int get_height();
-};
-
-LTexture::LTexture() {
-	texture = NULL;
-	width = 0;
-	height = 0;
-}
-
-LTexture::~LTexture() {
-	free();
-}
-
-bool LTexture::load_from_file(std::string path) {
-	free();
-
-	SDL_Texture* new_texture = nullptr;
-
-	SDL_Surface* loaded_surface = IMG_Load(path.c_str());
-	if (!loaded_surface) {
-		printf("Unable to load image %s! SDL_image Error: %s\n", path.c_str(), IMG_GetError());
-		return false;
-	}
-
-	SDL_SetColorKey(loaded_surface, SDL_TRUE, SDL_MapRGB(loaded_surface->format, 0, 0xFF, 0xFF));
-	new_texture = SDL_CreateTextureFromSurface(renderer, loaded_surface);
-	if (!new_texture) {
-		printf("Unable to create texture from %s! SDL Error: %s\n", path.c_str(), SDL_GetError());
-		return false;
-	}
-	width = loaded_surface->w;
-	height = loaded_surface->h;
-
-	texture = new_texture;
-	return texture != NULL;
-}
-
-void LTexture::free() {
-	if (!texture) return;
-	SDL_DestroyTexture(texture);
-	texture = NULL;
-	width = 0;
-	height = 0;
-}
-
-void LTexture::render(int x = 0, int y = 0) {
-	SDL_Rect renderQuad = { x, y, width, height };
-	SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
-}
 
 LTexture texture;
 LTexture background_texture;
@@ -171,11 +101,11 @@ bool init() {
 }
 
 bool load_media() {
-	if (!texture.load_from_file("dude.png")) {
+	if (!texture.load_from_file("dude.png", renderer)) {
 		printf("Failed to load texture\n");
 		return false;
 	}
-	if (!background_texture.load_from_file("background.png")) {
+	if (!background_texture.load_from_file("background.png", renderer)) {
 		printf("Failed to load background texture image!\n");
 		return false;
 	}
@@ -187,8 +117,8 @@ void close() {
 	background_texture.free();
 
 	SDL_DestroyRenderer(renderer);
-	renderer = NULL;
 	SDL_DestroyWindow(window);
+	renderer = NULL;
 	window = NULL;
 	IMG_Quit();
 	SDL_Quit();
@@ -219,8 +149,8 @@ int main(int argc, char *args[]) {
 		SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
 		SDL_RenderClear(renderer);
 
-		background_texture.render();
-		texture.render(240, 190);
+		background_texture.render(0, 0, renderer);
+		texture.render(240, 190, renderer);
 		
 		SDL_RenderPresent(renderer);
 	}

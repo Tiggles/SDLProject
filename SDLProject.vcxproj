@@ -129,13 +129,21 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="background.png" />
+    <Image Include="C:\Users\Jonas\circles.png" />
     <Image Include="down.bmp" />
+    <Image Include="dude.png" />
     <Image Include="Image.bmp" />
     <Image Include="left.bmp" />
     <Image Include="right.bmp" />
     <Image Include="up.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="SDL_Includes.hpp" />
+    <ClInclude Include="Texture.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

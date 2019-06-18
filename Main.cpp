@@ -31,8 +31,8 @@ SDL_Surface* gKeyPressSurfaces[KEY_PRESS_SURFACE_TOTAL];
 SDL_Surface* currentSurface = NULL;
 SDL_Renderer* renderer = NULL;
 
-LTexture texture;
-LTexture background_texture;
+SDL_Rect spriteClips[4];
+LTexture spriteSheetTexture;
 
 SDL_Texture *load_texture(std::string path) {
 	// Final texture
@@ -101,20 +101,41 @@ bool init() {
 }
 
 bool load_media() {
-	if (!texture.load_from_file("dude.png", renderer)) {
-		printf("Failed to load texture\n");
+	if (!spriteSheetTexture.load_from_file("circles.png", renderer)) {
+		printf("Failed to load sprite sheet texture!\n");
 		return false;
 	}
-	if (!background_texture.load_from_file("background.png", renderer)) {
-		printf("Failed to load background texture image!\n");
-		return false;
-	}
+
+
+	//Set top left sprite
+	spriteClips[0].x = 0;
+	spriteClips[0].y = 0;
+	spriteClips[0].w = 32;
+	spriteClips[0].h = 32;
+
+	//Set top right sprite
+	spriteClips[1].x = 32;
+	spriteClips[1].y = 0;
+	spriteClips[1].w = 32;
+	spriteClips[1].h = 32;
+
+	//Set bottom left sprite
+	spriteClips[2].x = 0;
+	spriteClips[2].y = 32;
+	spriteClips[2].w = 32;
+	spriteClips[2].h = 32;
+
+	//Set bottom right sprite
+	spriteClips[3].x = 32;
+	spriteClips[3].y = 32;
+	spriteClips[3].w = 32;
+	spriteClips[3].h = 32;
+
 	return true;
 }
 
 void close() {
-	texture.free();
-	background_texture.free();
+	spriteSheetTexture.free();
 
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
@@ -149,9 +170,14 @@ int main(int argc, char *args[]) {
 		SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
 		SDL_RenderClear(renderer);
 
-		background_texture.render(0, 0, renderer);
-		texture.render(240, 190, renderer);
-		
+		spriteSheetTexture.render(0, 0, renderer, &spriteClips[0]);
+
+		spriteSheetTexture.render(SCREEN_WIDTH - spriteClips[1].w, 0, renderer, &spriteClips[1]);
+
+		spriteSheetTexture.render(0, SCREEN_HEIGHT - spriteClips[1].h, renderer, &spriteClips[2]);
+
+		spriteSheetTexture.render(SCREEN_WIDTH - spriteClips[3].w, SCREEN_HEIGHT - spriteClips[3].h, renderer, &spriteClips[3]);
+
 		SDL_RenderPresent(renderer);
 	}
 	close();

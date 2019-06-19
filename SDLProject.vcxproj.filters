@@ -47,6 +47,9 @@
     <Image Include="C:\Users\Jonas\circles.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="squares.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Texture.hpp">

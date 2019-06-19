@@ -30,9 +30,7 @@ SDL_Surface* screenSurface = NULL;
 SDL_Surface* gKeyPressSurfaces[KEY_PRESS_SURFACE_TOTAL];
 SDL_Surface* currentSurface = NULL;
 SDL_Renderer* renderer = NULL;
-
-SDL_Rect spriteClips[4];
-LTexture spriteSheetTexture;
+LTexture modulated_texture;
 
 SDL_Texture *load_texture(std::string path) {
 	// Final texture
@@ -101,41 +99,17 @@ bool init() {
 }
 
 bool load_media() {
-	if (!spriteSheetTexture.load_from_file("circles.png", renderer)) {
+	if (!modulated_texture.load_from_file("squares.png", renderer)) {
 		printf("Failed to load sprite sheet texture!\n");
 		return false;
 	}
 
 
-	//Set top left sprite
-	spriteClips[0].x = 0;
-	spriteClips[0].y = 0;
-	spriteClips[0].w = 32;
-	spriteClips[0].h = 32;
-
-	//Set top right sprite
-	spriteClips[1].x = 32;
-	spriteClips[1].y = 0;
-	spriteClips[1].w = 32;
-	spriteClips[1].h = 32;
-
-	//Set bottom left sprite
-	spriteClips[2].x = 0;
-	spriteClips[2].y = 32;
-	spriteClips[2].w = 32;
-	spriteClips[2].h = 32;
-
-	//Set bottom right sprite
-	spriteClips[3].x = 32;
-	spriteClips[3].y = 32;
-	spriteClips[3].w = 32;
-	spriteClips[3].h = 32;
-
 	return true;
 }
 
 void close() {
-	spriteSheetTexture.free();
+	modulated_texture.free();
 
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
@@ -148,6 +122,12 @@ void close() {
 int main(int argc, char *args[]) {
 	bool quit = false;
 	SDL_Event e;
+
+	SDL_Texture* tex;
+
+	Uint8 red = 255;
+	Uint8 green = 255;
+	Uint8 blue = 255;
 
 	if (!init()) {
 		printf("Init fail\n");
@@ -165,18 +145,47 @@ int main(int argc, char *args[]) {
 	{
 		while (SDL_PollEvent(&e) != 0) {
 			if (e.type == SDL_QUIT) quit = true;
+			else if (e.type == SDL_KEYDOWN) {
+				switch (e.key.keysym.sym)
+				{
+					//Increase red
+				case SDLK_q:
+					red += 32;
+					break;
+
+					//Increase green
+				case SDLK_w:
+					green += 32;
+					break;
+
+					//Increase blue
+				case SDLK_e:
+					blue += 32;
+					break;
+
+					//Decrease red
+				case SDLK_a:
+					red -= 32;
+					break;
+
+					//Decrease green
+				case SDLK_s:
+					green -= 32;
+					break;
+
+					//Decrease blue
+				case SDLK_d:
+					blue -= 32;
+					break;
+				}
+			}
 		}
 
 		SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
 		SDL_RenderClear(renderer);
 
-		spriteSheetTexture.render(0, 0, renderer, &spriteClips[0]);
-
-		spriteSheetTexture.render(SCREEN_WIDTH - spriteClips[1].w, 0, renderer, &spriteClips[1]);
-
-		spriteSheetTexture.render(0, SCREEN_HEIGHT - spriteClips[1].h, renderer, &spriteClips[2]);
-
-		spriteSheetTexture.render(SCREEN_WIDTH - spriteClips[3].w, SCREEN_HEIGHT - spriteClips[3].h, renderer, &spriteClips[3]);
+		modulated_texture.setColor(red, green, blue);
+		modulated_texture.render(0, 0, renderer);
 
 		SDL_RenderPresent(renderer);
 	}

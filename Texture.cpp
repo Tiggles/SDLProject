@@ -56,3 +56,15 @@ void LTexture::render(int x, int y, SDL_Renderer *renderer, SDL_Rect *clip) {
 
 	SDL_RenderCopy(renderer, texture, clip, &renderQuad);
 }
+
+int LTexture::get_height() {
+	return height;
+}
+
+int LTexture::get_width() {
+	return width;
+}
+
+void LTexture::setColor(Uint8 red, Uint8 green, Uint8 blue) {
+	SDL_SetTextureColorMod(texture, red, green, blue);
+}

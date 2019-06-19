@@ -16,4 +16,6 @@ public:
 	void render(int x, int y, SDL_Renderer *renderer, SDL_Rect *clip = NULL);
 	int get_width();
 	int get_height();
+
+	void setColor(Uint8 red, Uint8 green, Uint8 blue);
 };

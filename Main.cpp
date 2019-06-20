@@ -13,7 +13,7 @@ bool load_media();
 void close();
 
 // Load invidivual image as texture
-SDL_Texture *load_texture(std::string path);
+SDL_Texture* load_texture(std::string path);
 
 
 enum KeyPressSurfaces {
@@ -31,11 +31,12 @@ SDL_Surface* gKeyPressSurfaces[KEY_PRESS_SURFACE_TOTAL];
 SDL_Surface* currentSurface = NULL;
 SDL_Renderer* renderer = NULL;
 LTexture modulated_texture;
+LTexture background_texture;
 
-SDL_Texture *load_texture(std::string path) {
+SDL_Texture* load_texture(std::string path) {
 	// Final texture
-	SDL_Texture *newTexture;
-	SDL_Surface *loadedSurface = IMG_Load(path.c_str());
+	SDL_Texture* newTexture;
+	SDL_Surface* loadedSurface = IMG_Load(path.c_str());
 	if (loadedSurface == NULL) {
 		printf("Unable to load image %s! Error: %s\n", path.c_str(), IMG_GetError());
 		return NULL;
@@ -49,9 +50,9 @@ SDL_Texture *load_texture(std::string path) {
 	return newTexture;
 }
 
-SDL_Surface *loadSurface(std::string path) {
-	SDL_Surface *optimizedSurface = NULL;
-	SDL_Surface *loadedSurface = IMG_Load(path.c_str());
+SDL_Surface* loadSurface(std::string path) {
+	SDL_Surface* optimizedSurface = NULL;
+	SDL_Surface* loadedSurface = IMG_Load(path.c_str());
 	if (loadedSurface == NULL)
 	{
 		printf("Unable to load image %s! Error: %s\n", path.c_str(), IMG_GetError());
@@ -72,7 +73,7 @@ bool init() {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		printf("SDL could not be initialized. Error: %s\n", SDL_GetError());
 		return false;
-	} 
+	}
 
 	window = SDL_CreateWindow("Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
 	if (window == NULL) {
@@ -90,7 +91,7 @@ bool init() {
 
 	int imgFlags = IMG_INIT_PNG;
 	// Pass image initialization flags to allow for ›
-	if ( !(IMG_Init(imgFlags) & imgFlags)) {
+	if (!(IMG_Init(imgFlags) & imgFlags)) {
 		printf("SDL_IMAGE could not initialize! Error: %s\n", IMG_GetError());
 		return false;
 	}
@@ -101,9 +102,16 @@ bool init() {
 bool load_media() {
 	if (!modulated_texture.load_from_file("squares.png", renderer)) {
 		printf("Failed to load sprite sheet texture!\n");
-		return false;
+
+	}
+	else {
+		modulated_texture.setBlendMode(SDL_BLENDMODE_BLEND);
 	}
 
+	if (!background_texture.load_from_file("circles.png", renderer)) {
+		printf("Failed to load background\n");
+		return false;
+	}
 
 	return true;
 }
@@ -119,15 +127,13 @@ void close() {
 	SDL_Quit();
 }
 
-int main(int argc, char *args[]) {
+int main(int argc, char* args[]) {
 	bool quit = false;
 	SDL_Event e;
 
 	SDL_Texture* tex;
 
-	Uint8 red = 255;
-	Uint8 green = 255;
-	Uint8 blue = 255;
+	Uint8 a = 255;
 
 	if (!init()) {
 		printf("Init fail\n");
@@ -146,45 +152,41 @@ int main(int argc, char *args[]) {
 		while (SDL_PollEvent(&e) != 0) {
 			if (e.type == SDL_QUIT) quit = true;
 			else if (e.type == SDL_KEYDOWN) {
-				switch (e.key.keysym.sym)
+				//Increase alpha on w
+				if (e.key.keysym.sym == SDLK_w)
 				{
-					//Increase red
-				case SDLK_q:
-					red += 32;
-					break;
-
-					//Increase green
-				case SDLK_w:
-					green += 32;
-					break;
-
-					//Increase blue
-				case SDLK_e:
-					blue += 32;
-					break;
-
-					//Decrease red
-				case SDLK_a:
-					red -= 32;
-					break;
-
-					//Decrease green
-				case SDLK_s:
-					green -= 32;
-					break;
-
-					//Decrease blue
-				case SDLK_d:
-					blue -= 32;
-					break;
+					//Cap if over 255
+					if (a + 32 > 255)
+					{
+						a = 255;
+					}
+					//Increment otherwise
+					else
+					{
+						a += 32;
+					}
+				}
+				//Decrease alpha on s
+				else if (e.key.keysym.sym == SDLK_s)
+				{
+					//Cap if below 0
+					if (a - 32 < 0)
+					{
+						a = 0;
+					}
+					//Decrement otherwise
+					else
+					{
+						a -= 32;
+					}
 				}
 			}
 		}
 
 		SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
 		SDL_RenderClear(renderer);
-
-		modulated_texture.setColor(red, green, blue);
+		background_texture.render(0, 0, renderer);
+		modulated_texture.setAlpha(a);
 		modulated_texture.render(0, 0, renderer);
 
 		SDL_RenderPresent(renderer);

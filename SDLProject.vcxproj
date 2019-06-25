@@ -132,8 +132,9 @@
     <ClCompile Include="Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="anim.png" />
     <Image Include="background.png" />
-    <Image Include="C:\Users\Jonas\circles.png" />
+    <Image Include="circles.png" />
     <Image Include="down.bmp" />
     <Image Include="dude.png" />
     <Image Include="Image.bmp" />

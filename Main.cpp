@@ -4,6 +4,7 @@
 #include <string>
 #include "SDL_Includes.hpp"
 #include "Texture.hpp"
+#include <iostream>
 
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
@@ -11,10 +12,6 @@ const int SCREEN_HEIGHT = 480;
 bool init();
 bool load_media();
 void close();
-
-// Load invidivual image as texture
-SDL_Texture* load_texture(std::string path);
-
 
 enum KeyPressSurfaces {
 	KEY_PRESS_SURFACE_DEFAULT,
@@ -30,25 +27,9 @@ SDL_Surface* screenSurface = NULL;
 SDL_Surface* gKeyPressSurfaces[KEY_PRESS_SURFACE_TOTAL];
 SDL_Surface* currentSurface = NULL;
 SDL_Renderer* renderer = NULL;
-LTexture modulated_texture;
-LTexture background_texture;
-
-SDL_Texture* load_texture(std::string path) {
-	// Final texture
-	SDL_Texture* newTexture;
-	SDL_Surface* loadedSurface = IMG_Load(path.c_str());
-	if (loadedSurface == NULL) {
-		printf("Unable to load image %s! Error: %s\n", path.c_str(), IMG_GetError());
-		return NULL;
-	}
-
-	newTexture = SDL_CreateTextureFromSurface(renderer, loadedSurface);
-	if (newTexture == NULL) {
-		printf("Error creating texture from %s. Error: %s\n", path.c_str(), SDL_GetError());
-	}
-	SDL_FreeSurface(loadedSurface);
-	return newTexture;
-}
+const int WALKING_ANIMATION_FRAMES = 4;
+SDL_Rect sprite_clips[WALKING_ANIMATION_FRAMES];
+LTexture gSpriteSheetTexture;
 
 SDL_Surface* loadSurface(std::string path) {
 	SDL_Surface* optimizedSurface = NULL;
@@ -81,7 +62,7 @@ bool init() {
 		return false;
 	}
 
-	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 	if (renderer == NULL) {
 		printf("Renderer could not be created. Error: %s\n", SDL_GetError());
 		return false;
@@ -100,25 +81,36 @@ bool init() {
 }
 
 bool load_media() {
-	if (!modulated_texture.load_from_file("squares.png", renderer)) {
-		printf("Failed to load sprite sheet texture!\n");
-
-	}
-	else {
-		modulated_texture.setBlendMode(SDL_BLENDMODE_BLEND);
-	}
-
-	if (!background_texture.load_from_file("circles.png", renderer)) {
-		printf("Failed to load background\n");
+	if (!gSpriteSheetTexture.load_from_file("anim.png", renderer)) {
+		printf("Failed to load walking animation texture!\n");
 		return false;
 	}
+
+	//Set sprite clips
+	sprite_clips[0].x = 0;
+	sprite_clips[0].y = 0;
+	sprite_clips[0].w = 32;
+	sprite_clips[0].h = 64;
+
+	sprite_clips[1].x = 32;
+	sprite_clips[1].y = 0;
+	sprite_clips[1].w = 32;
+	sprite_clips[1].h = 64;
+
+	sprite_clips[2].x = 64;
+	sprite_clips[2].y = 0;
+	sprite_clips[2].w = 32;
+	sprite_clips[2].h = 64;
+
+	sprite_clips[3].x = 96;
+	sprite_clips[3].y = 0;
+	sprite_clips[3].w = 32;
+	sprite_clips[3].h = 64;
 
 	return true;
 }
 
 void close() {
-	modulated_texture.free();
-
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	renderer = NULL;
@@ -131,9 +123,7 @@ int main(int argc, char* args[]) {
 	bool quit = false;
 	SDL_Event e;
 
-	SDL_Texture* tex;
-
-	Uint8 a = 255;
+	int frame = 0;
 
 	if (!init()) {
 		printf("Init fail\n");
@@ -151,45 +141,15 @@ int main(int argc, char* args[]) {
 	{
 		while (SDL_PollEvent(&e) != 0) {
 			if (e.type == SDL_QUIT) quit = true;
-			else if (e.type == SDL_KEYDOWN) {
-				//Increase alpha on w
-				if (e.key.keysym.sym == SDLK_w)
-				{
-					//Cap if over 255
-					if (a + 32 > 255)
-					{
-						a = 255;
-					}
-					//Increment otherwise
-					else
-					{
-						a += 32;
-					}
-				}
-				//Decrease alpha on s
-				else if (e.key.keysym.sym == SDLK_s)
-				{
-					//Cap if below 0
-					if (a - 32 < 0)
-					{
-						a = 0;
-					}
-					//Decrement otherwise
-					else
-					{
-						a -= 32;
-					}
-				}
-			}
 		}
 
+		SDL_Rect *current_clip = &sprite_clips[frame / 4];
 		SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
 		SDL_RenderClear(renderer);
-		background_texture.render(0, 0, renderer);
-		modulated_texture.setAlpha(a);
-		modulated_texture.render(0, 0, renderer);
-
+		gSpriteSheetTexture.render((SCREEN_WIDTH - current_clip->w) / 2, (SCREEN_HEIGHT - current_clip->h) / 2, renderer, current_clip);
 		SDL_RenderPresent(renderer);
+		frame++;
+		if (frame / 4 >= WALKING_ANIMATION_FRAMES) frame = 0;
 	}
 	close();
 	return 0;

@@ -44,10 +44,13 @@
     <Image Include="background.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="C:\Users\Jonas\circles.png">
+    <Image Include="squares.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="squares.png">
+    <Image Include="anim.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="circles.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
